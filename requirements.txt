@@ -4,4 +4,4 @@ datarobot
 datarobotx
 streamlit
 openai
-plotly
+matplotlib

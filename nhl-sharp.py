@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 from pandas import json_normalize
 from datetime import datetime, timedelta
 import os
@@ -7,10 +8,10 @@ import datarobotx as drx
 import pytz
 import streamlit as st
 from openai import OpenAI
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROBOT_API_KEY"])
+drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROBOT_API_TOKEN"])
 
 #Configure the streamlit page title, favicon, layout, etc
 st.set_page_config(page_title="NHL Picks", layout="wide")
@@ -246,7 +247,7 @@ def getPredictions(startdate, enddate):
     predictions = pd.DataFrame(predictions)
     probabilities = drx.Deployment.predict_proba(deployment, X=df3)
     probabilities = pd.DataFrame(probabilities)
-    probabilities.columns = ["Home Team Win Probability", "Away Team Win Probability"]
+    probabilities.columns = ["homeTeam_WinProbability", "awayTeam_WinProbability"]
     predictions = pd.concat([predictions,probabilities,df3], axis=1)
     return predictions
 
@@ -279,32 +280,42 @@ def explainPrediction(game):
     )
     return completion.choices[0].message.content
 
-def createGuage():
-    # Create figure
-    fig = go.Figure()
+def createGuage(probability, title='Win Probability Gauge'):
+    # Gauge settings
+    start_angle, end_angle = 180, 0
+    min_prob, max_prob = 0, 1
 
-    # Configure the gauge chart
-    fig.add_trace(go.Indicator(
-        mode="gauge+number",  # Gauge chart with a numeric display
-        value=70,  # Current value (e.g., progress percentage)
-        domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Project Progress"},  # Title of the gauge chart
-        gauge={
-            'axis': {'range': [None, 100]},  # Setting the range of the gauge from 0 to 100
-            'bar': {'color': "blue"},  # Color of the gauge's bar
-            'steps': [
-                {'range': [0, 50], 'color': "lightgray"},  # Color settings for different ranges
-                {'range': [50, 100], 'color': "gray"}  # Customizing colors based on ranges
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},  # Setting the threshold line properties
-                'thickness': 0.75,
-                'value': 90  # Threshold value
-            }
-        }
-    ))
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
 
-    return fig
+    # Hide standard axes
+    ax.axis('off')
+
+    # Create the gauge arc
+    ax.add_patch(plt.Circle((5, 1), radius=4, color='lightgray', alpha=0.5))
+    ax.add_patch(plt.Circle((5, 1), radius=3.5, color='white'))
+
+    # Add ticks for probability
+    num_ticks = 10
+    tick_angles = np.linspace(start_angle, end_angle, num_ticks)
+    for angle in tick_angles:
+        x_start = 5 + 3.5 * np.cos(np.radians(angle))
+        y_start = 1 + 3.5 * np.sin(np.radians(angle))
+        x_end = 5 + 4 * np.cos(np.radians(angle))
+        y_end = 1 + 4 * np.sin(np.radians(angle))
+        ax.plot([x_start, x_end], [y_start, y_end], color='black')
+
+    # Add the needle
+    angle = np.interp(probability, [min_prob, max_prob], [start_angle, end_angle])
+    x_end = 5 + 3.5 * np.cos(np.radians(angle))
+    y_end = 1 + 3.5 * np.sin(np.radians(angle))
+    ax.plot([5, x_end], [1, y_end], color='red', linewidth=2)
+
+    # Add title
+    plt.title(title, fontsize=14, y=1.1)
+    return plt
 
 def mainPage():
     eastern = pytz.timezone('US/Eastern')
@@ -331,7 +342,7 @@ def mainPage():
         predictionBadgeAway = " :money_with_wings: "
 
     # create the gauge
-    fig = createGuage()
+    gauge = createGuage(probability=.7)
     # 2 columns with selected team logos
     container1 = st.container()
     awayCol, middleCol, homeCol = container1.columns([1,0.5,1])
@@ -339,7 +350,7 @@ def mainPage():
     awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
     middleCol.title("           ")
     middleCol.title("           ")
-    #st.plotly_chart(fig, theme="streamlit", use_container_width=True)
+    #st.pyplot(gauge)
     middleCol.image("vs-image.png", width=150)
     homeCol.title(predictionBadgeHome + str(game["homeTeam_teamName.default"].iloc[0]) + predictionBadgeHome)
     homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
@@ -353,6 +364,7 @@ def mainPage():
         st.header("Score")
         st.subheader(str(game["homeTeam_teamName.default"].iloc[0]) + ": " + str(game["homeTeam_score"].iloc[0].astype(int)))
         st.subheader(str(game["awayTeam_teamName.default"].iloc[0]) + ": " + str(game["awayTeam_score"].iloc[0].astype(int)))
+
     getAnalysisButton = st.button(label="Explain it Coach!")
     if getAnalysisButton:
         with st.spinner("Don Cherry is thinking..."):
@@ -379,8 +391,14 @@ def mainPage():
     matchup = pd.concat([awayTeam_df,homeTeam_df], axis=1)
     matchup.columns = ["Away","Home"]
     matchup.columns = [matchup["Away"].loc["teamName.default"], matchup["Home"].loc["teamName.default"]]
+    matchup.drop(['id', 'logo', 'darkLogo', 'awaySplitSquad', 'radioLink',
+       'odds', 'placeName.default_x', 'placeName.fr_x', 'date', 'teamLogo', 'waiversSequence',
+       'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
+       'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
     container3 = st.container()
-    container3.table(matchup.iloc[10:-6,:])
+    container3.table(matchup)
+    st.dataframe(game)
+    st.dataframe(predictions)
 
 
 
