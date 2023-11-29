@@ -237,7 +237,7 @@ def joinStandings(schedule, standings, train):
 @st.cache_data(show_spinner=False)
 def getPredictions(startdate, enddate):
     df = get_nhl_schedule(startdate, enddate, train=False)
-    df = df.loc[df["startTimeUTC"]<enddate.date()]
+    df = df.loc[df["startTimeUTC"]<enddate]
     df2 = getStandings(df)
     df3 = joinStandings(df, df2, train=False)
     deployment = drx.Deployment("6560f92ef3aa6cdc30c695a1")
