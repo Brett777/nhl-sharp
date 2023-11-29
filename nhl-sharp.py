@@ -397,8 +397,7 @@ def mainPage():
        'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
     container3 = st.container()
     container3.table(matchup)
-    st.dataframe(game)
-    st.dataframe(predictions)
+
 
 
 
