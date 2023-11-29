@@ -8,7 +8,7 @@ import datarobotx as drx
 import pytz
 import streamlit as st
 from openai import OpenAI
-import matplotlib.pyplot as plt
+
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROBOT_API_TOKEN"])
@@ -280,43 +280,6 @@ def explainPrediction(game):
     )
     return completion.choices[0].message.content
 
-def createGuage(probability, title='Win Probability Gauge'):
-    # Gauge settings
-    start_angle, end_angle = 180, 0
-    min_prob, max_prob = 0, 1
-
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-
-    # Hide standard axes
-    ax.axis('off')
-
-    # Create the gauge arc
-    ax.add_patch(plt.Circle((5, 1), radius=4, color='lightgray', alpha=0.5))
-    ax.add_patch(plt.Circle((5, 1), radius=3.5, color='white'))
-
-    # Add ticks for probability
-    num_ticks = 10
-    tick_angles = np.linspace(start_angle, end_angle, num_ticks)
-    for angle in tick_angles:
-        x_start = 5 + 3.5 * np.cos(np.radians(angle))
-        y_start = 1 + 3.5 * np.sin(np.radians(angle))
-        x_end = 5 + 4 * np.cos(np.radians(angle))
-        y_end = 1 + 4 * np.sin(np.radians(angle))
-        ax.plot([x_start, x_end], [y_start, y_end], color='black')
-
-    # Add the needle
-    angle = np.interp(probability, [min_prob, max_prob], [start_angle, end_angle])
-    x_end = 5 + 3.5 * np.cos(np.radians(angle))
-    y_end = 1 + 3.5 * np.sin(np.radians(angle))
-    ax.plot([5, x_end], [1, y_end], color='red', linewidth=2)
-
-    # Add title
-    plt.title(title, fontsize=14, y=1.1)
-    return plt
-
 def mainPage():
     eastern = pytz.timezone('US/Eastern')
     startdate=datetime.now(eastern).date() - timedelta(days=1)
@@ -341,8 +304,7 @@ def mainPage():
         predictionBadgeHome = ""
         predictionBadgeAway = " :money_with_wings: "
 
-    # create the gauge
-    gauge = createGuage(probability=.7)
+
     # 2 columns with selected team logos
     container1 = st.container()
     awayCol, middleCol, homeCol = container1.columns([1,0.5,1])
@@ -350,7 +312,6 @@ def mainPage():
     awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
     middleCol.title("           ")
     middleCol.title("           ")
-    #st.pyplot(gauge)
     middleCol.image("vs-image.png", width=150)
     homeCol.title(predictionBadgeHome + str(game["homeTeam_teamName.default"].iloc[0]) + predictionBadgeHome)
     homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
