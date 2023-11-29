@@ -326,10 +326,12 @@ def mainPage():
         explanation = explainPrediction(game)
 
     # GPT Don Cherry explanation of who the winner will likely be.
-    try:
-        st.write(explanation)
-    except Exception as e:
-        st.write("Don Cherry explanation is unavailable at the moment.")
+    getAnalysisButton = st.button(label="Explain it Coach!")
+    if getAnalysisButton:
+        try:
+            st.write(explanation)
+        except Exception as e:
+            st.write("Don Cherry explanation is unavailable at the moment.")
 
     # 2 tables with head-to-head key metrics from standings
     # Filtering and pivoting for homeTeam
