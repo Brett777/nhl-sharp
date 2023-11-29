@@ -321,13 +321,12 @@ def mainPage():
         st.header("Score")
         st.subheader(str(game["homeTeam_teamName.default"].iloc[0]) + ": " + str(game["homeTeam_score"].iloc[0].astype(int)))
         st.subheader(str(game["awayTeam_teamName.default"].iloc[0]) + ": " + str(game["awayTeam_score"].iloc[0].astype(int)))
-        st.subheader("Pre-game Analysis")
-    with st.spinner("Don Cherry is thinking..."):
-        explanation = explainPrediction(game)
-
-    # GPT Don Cherry explanation of who the winner will likely be
     getAnalysisButton = st.button(label="Explain it Coach!")
     if getAnalysisButton:
+        with st.spinner("Don Cherry is thinking..."):
+            explanation = explainPrediction(game)
+
+        # GPT Don Cherry explanation of who the winner will likely be
         try:
             st.write(explanation)
         except Exception as e:
