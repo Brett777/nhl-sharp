@@ -3,14 +3,13 @@ import pandas as pd
 from pandas import json_normalize
 from datetime import datetime, timedelta
 import os
-from io import StringIO
 import datarobotx as drx
-import datarobot as dr
 import pytz
 import streamlit as st
 from openai import OpenAI
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROBOT_API_KEY"])
 
 #Configure the streamlit page title, favicon, layout, etc
 st.set_page_config(page_title="NHL Picks", layout="wide")
