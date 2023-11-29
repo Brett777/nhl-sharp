@@ -7,6 +7,7 @@ import datarobotx as drx
 import pytz
 import streamlit as st
 from openai import OpenAI
+import plotly.graph_objects as go
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROBOT_API_KEY"])
@@ -278,6 +279,33 @@ def explainPrediction(game):
     )
     return completion.choices[0].message.content
 
+def createGuage():
+    # Create figure
+    fig = go.Figure()
+
+    # Configure the gauge chart
+    fig.add_trace(go.Indicator(
+        mode="gauge+number",  # Gauge chart with a numeric display
+        value=70,  # Current value (e.g., progress percentage)
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Project Progress"},  # Title of the gauge chart
+        gauge={
+            'axis': {'range': [None, 100]},  # Setting the range of the gauge from 0 to 100
+            'bar': {'color': "blue"},  # Color of the gauge's bar
+            'steps': [
+                {'range': [0, 50], 'color': "lightgray"},  # Color settings for different ranges
+                {'range': [50, 100], 'color': "gray"}  # Customizing colors based on ranges
+            ],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},  # Setting the threshold line properties
+                'thickness': 0.75,
+                'value': 90  # Threshold value
+            }
+        }
+    ))
+
+    return fig
+
 def mainPage():
     eastern = pytz.timezone('US/Eastern')
     startdate=datetime.now(eastern).date() - timedelta(days=1)
@@ -301,6 +329,9 @@ def mainPage():
         predictedWinner = game["awayTeam_teamName.default"].iloc[0]
         predictionBadgeHome = ""
         predictionBadgeAway = " :money_with_wings: "
+
+    # create the gauge
+    fig = createGuage()
     # 2 columns with selected team logos
     container1 = st.container()
     awayCol, middleCol, homeCol = container1.columns([1,0.5,1])
@@ -308,6 +339,7 @@ def mainPage():
     awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
     middleCol.title("           ")
     middleCol.title("           ")
+    st.plotly_chart(fig, theme="streamlit", use_container_width=True)
     middleCol.image("vs-image.png", width=150)
     homeCol.title(predictionBadgeHome + str(game["homeTeam_teamName.default"].iloc[0]) + predictionBadgeHome)
     homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
