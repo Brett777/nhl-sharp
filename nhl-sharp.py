@@ -279,8 +279,9 @@ def explainPrediction(game):
     return completion.choices[0].message.content
 
 def mainPage():
-    startdate=datetime.today()
-    enddate=datetime.today() + timedelta(days=1)
+    eastern = pytz.timezone('US/Eastern')
+    startdate=datetime.now(eastern).date()
+    enddate=datetime.now(eastern).date() + timedelta(days=1)
     #gameChoice = "2023-11-27 Florida Panthers @ Ottawa Senators"
     with st.spinner("processing..."):
         predictions = getPredictions(startdate=startdate, enddate=enddate)
