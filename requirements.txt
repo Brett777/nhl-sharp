@@ -1,6 +1,5 @@
 pandas
 requests
-nhl-api-py ==2.0.1
 datarobotx
 streamlit
 openai
