@@ -14,7 +14,7 @@ drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROB
 #Configure the streamlit page title, favicon, layout, etc
 st.set_page_config(page_title="NHL Picks", layout="wide")
 
-# Data prep function to convert string ratio to decimal value
+# Data prep function to convert string ratio to decimal value.
 @st.cache_data(show_spinner=False)
 def convert_to_decimal(ratio_str):
     try:
