@@ -380,7 +380,7 @@ def mainPage():
     matchup.columns = ["Away","Home"]
     matchup.columns = [matchup["Away"].loc["teamName.default"], matchup["Home"].loc["teamName.default"]]
     container3 = st.container()
-    container3.table(matchup)
+    container3.table(matchup.iloc[:, 10:-6])
 
 
 
