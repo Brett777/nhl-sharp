@@ -280,7 +280,7 @@ def explainPrediction(game):
 
 def mainPage():
     eastern = pytz.timezone('US/Eastern')
-    startdate=datetime.now(eastern).date()
+    startdate=datetime.now(eastern).date() - timedelta(days=1)
     enddate=datetime.now(eastern).date() + timedelta(days=1)
     #gameChoice = "2023-11-27 Florida Panthers @ Ottawa Senators"
     with st.spinner("processing..."):
@@ -325,7 +325,7 @@ def mainPage():
     with st.spinner("Don Cherry is thinking..."):
         explanation = explainPrediction(game)
 
-    # GPT Don Cherry explanation of who the winner will likely be.
+    # GPT Don Cherry explanation of who the winner will likely be
     getAnalysisButton = st.button(label="Explain it Coach!")
     if getAnalysisButton:
         try:
