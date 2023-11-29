@@ -339,7 +339,7 @@ def mainPage():
     awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
     middleCol.title("           ")
     middleCol.title("           ")
-    st.plotly_chart(fig, theme="streamlit", use_container_width=True)
+    #st.plotly_chart(fig, theme="streamlit", use_container_width=True)
     middleCol.image("vs-image.png", width=150)
     homeCol.title(predictionBadgeHome + str(game["homeTeam_teamName.default"].iloc[0]) + predictionBadgeHome)
     homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
