@@ -228,14 +228,6 @@ def joinStandings(schedule, standings, train):
     return schedule
 
 
-# Training Data
-# df = get_nhl_schedule("2017-10-01", "2023-11-14", train=True)
-# df3 = getStandings(df)
-# df = joinStandings(df,df3, train=True)
-# print("done")
-# df.to_csv("schedule.csv", index=False)
-# print("done")
-
 @st.cache_data(show_spinner=False)
 def getPredictions(startdate, enddate):
     df = get_nhl_schedule(startdate, enddate, train=False)
@@ -247,8 +239,8 @@ def getPredictions(startdate, enddate):
     predictions = pd.DataFrame(predictions)
     probabilities = drx.Deployment.predict_proba(deployment, X=df3)
     probabilities = pd.DataFrame(probabilities)
-    probabilities.columns = ["homeTeam_WinProbability", "awayTeam_WinProbability"]
-    predictions = pd.concat([predictions,probabilities,df3], axis=1)
+    probabilities.columns = ["homeTeam_WinProbability", "awayTeam_WinProbability", "id"]
+    predictions = pd.concat([predictions,probabilities[["homeTeam_WinProbability", "awayTeam_WinProbability"]],df3], axis=1)
     return predictions
 
 def explainPrediction(game):
@@ -360,6 +352,20 @@ def mainPage():
     container3.table(matchup)
 
 
+
+# Training Data
+# df = get_nhl_schedule("2017-10-01", "2023-11-14", train=True)
+# df3 = getStandings(df)
+# df = joinStandings(df,df3, train=True)
+# print("done")
+# df.to_csv("schedule.csv", index=False)
+# print("done")
+
+# Make Predictions
+# eastern = pytz.timezone('US/Eastern')
+# startdate=datetime.now(eastern).date() - timedelta(days=30)
+# enddate=datetime.now(eastern).date() + timedelta(days=1)
+# predictions = getPredictions(startdate=startdate, enddate=enddate)
 
 
 
