@@ -243,34 +243,62 @@ def getPredictions(startdate, enddate):
     predictions = pd.concat([predictions,probabilities[["homeTeam_WinProbability", "awayTeam_WinProbability"]],df3], axis=1)
     return predictions
 
-def explainPrediction(game):
+def explainPrediction(game, donMode):
     game = game.T.drop_duplicates().T
-    completion = client.chat.completions.create(
-        model='gpt-4-1106-preview',
-        #model="gpt-4",
-        #model="gpt-3.5-turbo",
-        temperature=1,
-        messages=[
-            {"role": "system",
-             "content": """
-                            You are Don Cherry.
-                            Speak in the voice of Don Cherry and do not break character.
-                            The user will ask for your assistance in explaining which team will likely win the hockey game. 
-                            The user will provide data for you to analyze.
-                            
-                            Here's how to interpret the data:
-                            explanation_x_feature_name is a data attribute from the standings table. Sometimes your audience won't understand what these mean, so you'll have to explain it, ELI5 style.Do not reference the feature name with quotes and underscores. Instead use the proper term for it. 
-                            explanation_x_strength is the amount this feature impacts the prediction. Never explicitly say this value, but factor it into your analysis.
-                            explanation_x_value is the actual value of the feature.
-                            explanation_x_qualitative_strength is the amount this feature impacts the prediction. Never explicitly say this value, but factor it into your analysis.                            
-                                 
-                            """
-             },
-            {"role": "user", "content": "Home team: " + str(game["homeTeam_teamName.default"].iloc[0])
-             + " Away team: " + str(game["awayTeam_teamName.default"].iloc[0])
-             + game.iloc[:,:27].to_json(orient='records')}
-        ]
-    )
+    if donMode == "Don Cherry":
+        completion = client.chat.completions.create(
+            model='gpt-4-1106-preview',
+            #model="gpt-4",
+            #model="gpt-3.5-turbo",
+            temperature=1,
+            messages=[
+                {"role": "system",
+                 "content": """
+                                You are Don Cherry.
+                                Speak in the voice of Don Cherry and do not break character.
+                                The user will ask for your assistance in explaining which team will likely win the hockey game. 
+                                The user will provide data for you to analyze.
+                                
+                                Here's how to interpret the data:
+                                explanation_x_feature_name is a data attribute from the standings table. Sometimes your audience won't understand what these mean, so you'll have to explain it, ELI5 style.Do not reference the feature name with quotes and underscores. Instead use the proper term for it. 
+                                explanation_x_strength is the amount this feature impacts the prediction. Never explicitly say this value, but factor it into your analysis.
+                                explanation_x_value is the actual value of the feature.
+                                explanation_x_qualitative_strength is the amount this feature impacts the prediction. Never explicitly say this value, but factor it into your analysis.                            
+                                     
+                                """
+                 },
+                {"role": "user", "content": "Home team: " + str(game["homeTeam_teamName.default"].iloc[0])
+                 + " Away team: " + str(game["awayTeam_teamName.default"].iloc[0])
+                 + game.iloc[:,:27].to_json(orient='records')}
+            ]
+        )
+    else:
+        completion = client.chat.completions.create(
+            model='gpt-4-1106-preview',
+            # model="gpt-4",
+            # model="gpt-3.5-turbo",
+            temperature=1,
+            messages=[
+                {"role": "system",
+                 "content": """
+                                        Youa helpful sports analyst.
+                                        Speak like a sports analyst.
+                                        You will provide the user an explanation of which team will likely win the hockey game. 
+                                        Review the provided data as part of your analysis.
+
+                                        Here's how to interpret the data:
+                                        explanation_x_feature_name is a data attribute from the standings table. Sometimes your audience won't understand what these terms mean, so you'll have to explain it, ELI5 style. Do not reference the feature name with quotes and underscores. Instead use the proper term for it. 
+                                        explanation_x_strength is the amount this feature affects the prediction. Never explicitly say this value, but factor it into your analysis.
+                                        explanation_x_value is the actual value of the feature.
+                                        explanation_x_qualitative_strength is the amount and direction that this feature affects the prediction. Never explicitly say this value, but factor it into your analysis.                            
+
+                                        """
+                 },
+                {"role": "user", "content": "Home team: " + str(game["homeTeam_teamName.default"].iloc[0])
+                                            + " Away team: " + str(game["awayTeam_teamName.default"].iloc[0])
+                                            + game.iloc[:, :27].to_json(orient='records')}
+            ]
+        )
     return completion.choices[0].message.content
 
 def mainPage():
@@ -285,6 +313,7 @@ def mainPage():
     with st.sidebar:
         gameChoice = st.selectbox(label="Game", options=predictions["Game Name"].unique())
         game = predictions.loc[predictions["Game Name"]==gameChoice]
+        donMode = st.radio("Enable Don Cherry Mode", ["Normal Sportscaster","Don Cherry"])
 
         print(game)
 
@@ -320,16 +349,16 @@ def mainPage():
         st.subheader(str(game["homeTeam_teamName.default"].iloc[0]) + ": " + str(game["homeTeam_score"].iloc[0].astype(int)))
         st.subheader(str(game["awayTeam_teamName.default"].iloc[0]) + ": " + str(game["awayTeam_score"].iloc[0].astype(int)))
 
-    getAnalysisButton = st.button(label="Explain it Coach!")
+    getAnalysisButton = st.button(label="Explain it !")
     if getAnalysisButton:
-        with st.spinner("Don Cherry is thinking..."):
-            explanation = explainPrediction(game)
+        with st.spinner("Thinking..."):
+            explanation = explainPrediction(game, donMode=donMode)
 
         # GPT Don Cherry explanation of who the winner will likely be
         try:
             st.write(explanation)
         except Exception as e:
-            st.write("Don Cherry explanation is unavailable at the moment.")
+            st.write("Explanation is unavailable at the moment.")
 
     # 2 tables with head-to-head key metrics from standings
     # Filtering and pivoting for homeTeam
