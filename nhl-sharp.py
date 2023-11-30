@@ -284,6 +284,7 @@ def mainPage():
     with st.sidebar:
         gameChoice = st.selectbox(label="Game", options=predictions["Game Name"].unique())
         game = predictions.loc[predictions["Game Name"]==gameChoice]
+        game = game.T.drop_duplicates().T
         print(game)
 
     # Predicted Winner
