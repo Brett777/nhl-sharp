@@ -296,7 +296,7 @@ def explainPrediction(game, donMode):
                  },
                 {"role": "user", "content": "Home team: " + str(game["homeTeam_teamName.default"].iloc[0])
                                             + " Away team: " + str(game["awayTeam_teamName.default"].iloc[0])
-                                            + game.iloc[:, :27].to_json(orient='records')}
+                                            + game.iloc[:, :28].to_json(orient='records')}
             ]
         )
     return completion.choices[0].message.content
@@ -354,11 +354,15 @@ def mainPage():
         with st.spinner("Thinking..."):
             explanation = explainPrediction(game, donMode=donMode)
 
-        # GPT Don Cherry explanation of who the winner will likely be
-        try:
-            st.write(explanation)
-        except Exception as e:
-            st.write("Explanation is unavailable at the moment.")
+        tab1, tab2 = st.tabs(["English", "Reason Codes"])
+        with tab1:
+            # GPT Don Cherry explanation of who the winner will likely be
+            try:
+                st.write(explanation)
+            except Exception as e:
+                st.write("Explanation is unavailable at the moment.")
+        with tab2:
+            st.table(game.iloc[:,:28].T)
 
     # 2 tables with head-to-head key metrics from standings
     # Filtering and pivoting for homeTeam
@@ -380,6 +384,7 @@ def mainPage():
        'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
        'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
     container3 = st.container()
+    st.header("Standings Head-to-Head")
     container3.table(matchup)
 
 
