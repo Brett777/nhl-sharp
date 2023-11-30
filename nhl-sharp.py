@@ -244,6 +244,7 @@ def getPredictions(startdate, enddate):
     return predictions
 
 def explainPrediction(game):
+    game = game.T.drop_duplicates().T
     completion = client.chat.completions.create(
         model='gpt-4-1106-preview',
         #model="gpt-4",
@@ -284,7 +285,7 @@ def mainPage():
     with st.sidebar:
         gameChoice = st.selectbox(label="Game", options=predictions["Game Name"].unique())
         game = predictions.loc[predictions["Game Name"]==gameChoice]
-        game = game.T.drop_duplicates().T
+
         print(game)
 
     # Predicted Winner
