@@ -384,7 +384,7 @@ def mainPage():
        'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
        'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
     container3 = st.container()
-    st.header("Standings Head-to-Head")
+    container3.header("Standings Head-to-Head")
     container3.table(matchup)
 
 
