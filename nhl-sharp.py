@@ -1,6 +1,8 @@
 import requests
 import pandas as pd
 import numpy as np
+import json
+import ast
 from pandas import json_normalize
 from datetime import datetime, timedelta
 import os
@@ -304,88 +306,119 @@ def explainPrediction(game, donMode):
 def mainPage():
     eastern = pytz.timezone('US/Eastern')
     startdate=datetime.now(eastern).date() - timedelta(days=1)
-    enddate=datetime.now(eastern).date() + timedelta(days=1)
+    enddate=datetime.now(eastern).date() + timedelta(days=2)
     #gameChoice = "2023-11-27 Florida Panthers @ Ottawa Senators"
     with st.spinner("processing..."):
         predictions = getPredictions(startdate=startdate, enddate=enddate)
-        predictions["Game Name"] = predictions["startTimeUTC"].astype(str) + " " + predictions["awayTeam_teamName.default"].astype(str) + " @ " + predictions["homeTeam_teamName.default"].astype(str)
+        predictions["Game Name"] = predictions["awayTeam_teamName.default"].astype(str) + " @ " + predictions["homeTeam_teamName.default"].astype(str)
         print(predictions)
     with st.sidebar:
-        gameChoice = st.selectbox(label="Game", options=predictions["Game Name"].unique())
+        date = st.date_input("Game Day", value=datetime.now(eastern).date(), min_value=startdate, max_value=enddate)
+        gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str)==str(date)]
+        gameChoice = st.selectbox(label="Game", options=gameDayPredictions["Game Name"].unique())
         game = predictions.loc[predictions["Game Name"]==gameChoice]
-        donMode = st.radio("Enable Don Cherry Mode", ["Normal Sportscaster","Don Cherry"])
+        donMode = st.radio("Enable Don Cherry Explanation Mode", ["Normal Sportscaster","Don Cherry"])
 
-        print(game)
+    #Title
+    titleContainer = st.container()
+    titleContainer1,titleContainer2,titleContainer3 = titleContainer.columns([0.1,0.3,1])
+    titleContainer1.image("DataRobot-Promo-Logo-Color.png", width = 150)
+
 
     # Predicted Winner
     if game["prediction"].iloc[0] == "Home":
-        predictedWinner = game["homeTeam_teamName.default"].iloc[0]
+        predictedWinner = game["homeTeam_teamCommonName.default"].iloc[0]
         predictionBadgeHome = " :money_with_wings: "
         predictionBadgeAway = ""
+        predictionHome = f"Odds favor the {predictedWinner} :money_with_wings:"
+        predictionAway = " "
     else:
-        predictedWinner = game["awayTeam_teamName.default"].iloc[0]
+        predictedWinner = game["awayTeam_teamCommonName.default"].iloc[0]
         predictionBadgeHome = ""
         predictionBadgeAway = " :money_with_wings: "
+        predictionAway = f"Odds favor the {predictedWinner} :money_with_wings:"
+        predictionHome = " "
+
+    head2head, allGames = st.tabs(["Head-to-Head","All Game Predictions"])
+    with head2head:
+        # 2 columns with selected team logos
+        container1 = st.container()
+        awayCol, middleCol, homeCol = container1.columns([1,0.85,1])
+        awayCol.title(game["awayTeam_teamName.default"].iloc[0])
+        awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
+        middleCol.title("           ")
+        middleCol.title("           ")
+        middleCol.title("           ")
+        middleCol.image("vs-image.png", width=150)
+        homeCol.title(game["homeTeam_teamName.default"].iloc[0])
+        homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
+        container2 = st.container()
+        container2Left,container2Mid,container2Right = container2.columns([.5, 1, .5])
 
 
-    # 2 columns with selected team logos
-    container1 = st.container()
-    awayCol, middleCol, homeCol = container1.columns([1,0.5,1])
-    awayCol.title(predictionBadgeAway + str(game["awayTeam_teamName.default"].iloc[0]) + predictionBadgeAway)
-    awayCol.image(str(game["awayTeam_logo"].iloc[0]), width = 275)
-    middleCol.title("           ")
-    middleCol.title("           ")
-    middleCol.image("vs-image.png", width=150)
-    homeCol.title(predictionBadgeHome + str(game["homeTeam_teamName.default"].iloc[0]) + predictionBadgeHome)
-    homeCol.image(str(game["homeTeam_logo"].iloc[0]), width = 275)
-    container2 = st.container()
-    container2Left,container2Mid,container2Right = container2.columns([.5, 1, .5])
+        if game["gameState"].iloc[0] != "FUT":
+            container2.header(" ")
+            container2.header(f"Before the puck dropped, the {predictedWinner} were favored to win :money_with_wings:")
+            st.header("Score")
+            st.subheader(str(game["homeTeam_teamName.default"].iloc[0]) + ": " + str(game["homeTeam_score"].iloc[0].astype(int)))
+            st.subheader(str(game["awayTeam_teamName.default"].iloc[0]) + ": " + str(game["awayTeam_score"].iloc[0].astype(int)))
+        else:
+            container2.header(" ")
+            container2.header(f"The {predictedWinner} will probably win :money_with_wings:")
 
-    if game["gameState"].iloc[0] == "FUT":
-        st.header("Coach's Analysis")
-        st.caption(str(game["startTimeUTC"].iloc[0].date()))
-    else:
-        st.header("Score")
-        st.subheader(str(game["homeTeam_teamName.default"].iloc[0]) + ": " + str(game["homeTeam_score"].iloc[0].astype(int)))
-        st.subheader(str(game["awayTeam_teamName.default"].iloc[0]) + ": " + str(game["awayTeam_score"].iloc[0].astype(int)))
+        getAnalysisButton = st.button(label="Explain it !")
+        if getAnalysisButton:
+            with st.spinner("Thinking..."):
+                explanation = explainPrediction(game, donMode=donMode)
 
-    getAnalysisButton = st.button(label="Explain it !")
-    if getAnalysisButton:
-        with st.spinner("Thinking..."):
-            explanation = explainPrediction(game, donMode=donMode)
+            tab1, tab2 = st.tabs(["Why", "AI Model Reason Codes"])
+            with tab1:
+                # GPT Don Cherry explanation of who the winner will likely be
+                try:
+                    st.write(explanation)
+                except Exception as e:
+                    st.write("Explanation is unavailable at the moment.")
+            with tab2:
+                st.table(game.iloc[:,:28].T)
 
-        tab1, tab2 = st.tabs(["English", "Reason Codes"])
-        with tab1:
-            # GPT Don Cherry explanation of who the winner will likely be
-            try:
-                st.write(explanation)
-            except Exception as e:
-                st.write("Explanation is unavailable at the moment.")
-        with tab2:
-            st.table(game.iloc[:,:28].T)
+        # 2 tables with head-to-head key metrics from standings
+        # Filtering and pivoting for homeTeam
+        homeTeam_cols = [col for col in game.columns if col.startswith("homeTeam_")]
+        homeTeam_df = game[homeTeam_cols].T
+        homeTeam_df.index = homeTeam_df.index.str.replace("homeTeam_","")
 
-    # 2 tables with head-to-head key metrics from standings
-    # Filtering and pivoting for homeTeam
-    homeTeam_cols = [col for col in game.columns if col.startswith("homeTeam_")]
-    homeTeam_df = game[homeTeam_cols].T
-    homeTeam_df.index = homeTeam_df.index.str.replace("homeTeam_","")
+        # Filtering and pivoting for awayTeam
+        awayTeam_cols = [col for col in game.columns if col.startswith("awayTeam_")]
+        awayTeam_df = game[awayTeam_cols].T
+        awayTeam_df.index = awayTeam_df.index.str.replace("awayTeam_", "")
 
-    # Filtering and pivoting for awayTeam
-    awayTeam_cols = [col for col in game.columns if col.startswith("awayTeam_")]
-    awayTeam_df = game[awayTeam_cols].T
-    awayTeam_df.index = awayTeam_df.index.str.replace("awayTeam_", "")
+        # Combine into single table
+        matchup = pd.concat([awayTeam_df,homeTeam_df], axis=1)
+        matchup.columns = ["Away","Home"]
+        matchup.columns = [matchup["Away"].loc["teamName.default"], matchup["Home"].loc["teamName.default"]]
+        matchup.drop(['id', 'logo', 'darkLogo', 'awaySplitSquad', 'radioLink',
+           'odds', 'placeName.default_x', 'placeName.fr_x', 'date', 'teamLogo', 'waiversSequence',
+           'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
+           'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
+        container3 = st.container()
+        container3.header("Standings Head-to-Head")
+        container3.table(matchup)
+    with allGames:
+        st.header("All Game Predictions")
+        st.caption("Completed games show the pre-game probabilities and prediction against the final outcome. Sort the table by probability to get the best bets.")
+        predictions = predictions.loc[:, ~predictions.columns.duplicated()]
+        allGamePredictions = predictions[["startTimeUTC","awayTeam_teamName.default","awayTeam_score","homeTeam_teamName.default","homeTeam_score","awayTeam_WinProbability","homeTeam_WinProbability","prediction"]]
+        allGamePredictions["Winner"] = "None"
+        allGamePredictions.loc[allGamePredictions["homeTeam_score"] > allGamePredictions["awayTeam_score"], "Winner"] = "Home"
+        allGamePredictions.loc[allGamePredictions["homeTeam_score"] < allGamePredictions["awayTeam_score"], "Winner"]="Away"
+        allGamePredictions["Correct Prediction"] = "None"
+        allGamePredictions.loc[allGamePredictions["Winner"] == allGamePredictions["prediction"], "Correct Prediction"] = "Correct"
+        allGamePredictions.loc[(~allGamePredictions["homeTeam_score"].isna())&(allGamePredictions["Winner"] != allGamePredictions["prediction"]), "Correct Prediction"] = "Incorrect"
+        allGamePredictions["startTimeUTC"] = pd.to_datetime(allGamePredictions["startTimeUTC"]).dt.date
+        allGamePredictions.columns = ['Game Day', 'Away Team','Away Score', 'Home Team','Home Score', 'Probability Home Wins','Probability Away Wins', 'AI Prediction', 'Actual Winner','Correct Prediction']
+        st.dataframe(allGamePredictions)
 
-    # Combine into single table
-    matchup = pd.concat([awayTeam_df,homeTeam_df], axis=1)
-    matchup.columns = ["Away","Home"]
-    matchup.columns = [matchup["Away"].loc["teamName.default"], matchup["Home"].loc["teamName.default"]]
-    matchup.drop(['id', 'logo', 'darkLogo', 'awaySplitSquad', 'radioLink',
-       'odds', 'placeName.default_x', 'placeName.fr_x', 'date', 'teamLogo', 'waiversSequence',
-       'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
-       'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
-    container3 = st.container()
-    container3.header("Standings Head-to-Head")
-    container3.table(matchup)
+
 
 
 
