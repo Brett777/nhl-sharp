@@ -322,7 +322,7 @@ def mainPage():
     #Title
     titleContainer = st.container()
     titleContainer1,titleContainer2,titleContainer3 = titleContainer.columns([0.1,0.3,1])
-    titleContainer1.image("national-hockey-league-nhl-logo-vector.png", width = 150)
+    titleContainer1.image("NHL-Logo-700x394.png", width = 75)
 
 
     # Predicted Winner
