@@ -355,7 +355,6 @@ def mainPage():
         container2 = st.container()
         container2Left,container2Mid,container2Right = container2.columns([.5, 1, .5])
 
-
         if game["gameState"].iloc[0] != "FUT":
             container2.header(" ")
             container2.header(f"Before the puck dropped, the {predictedWinner} were favored to win :money_with_wings:")
