@@ -400,9 +400,10 @@ def mainPage():
            'odds', 'placeName.default_x', 'placeName.fr_x', 'date', 'teamLogo', 'waiversSequence',
            'wildcardSequence', 'placeName.default_y','teamName.fr', 'teamAbbrev.default',
            'placeName.fr_y', 'homeSplitSquad'], axis=0, inplace=True)
-        container3 = st.container()
-        container3.header("Standings Head-to-Head")
-        container3.table(matchup)
+        with st.expander("See details"):
+            container3 = st.container()
+            container3.header("Standings Head-to-Head")
+            container3.table(matchup)
     with allGames:
         st.header("All Game Predictions")
         st.caption("Completed games show the pre-game probabilities and prediction against the final outcome. Sort the table by probability to get the best bets.")
