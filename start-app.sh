@@ -7,5 +7,5 @@
 #  Released under the terms of DataRobot Tool and Utility Agreement.
 #
 echo "Starting App"
-
-streamlit run nhl-sharp.py
+export OPENAI_API_KEY=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
+streamlit run hockey.py

@@ -19,7 +19,7 @@ drx.Context(endpoint=os.environ["DATAROBOT_ENDPOINT"], token=os.environ["DATAROB
 st.set_page_config(page_title="NHL Picks", layout="wide")
 
 # Data prep function to convert string ratio to decimal value.
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def convert_to_decimal(ratio_str):
     try:
         numerator, denominator = ratio_str.split('/')
@@ -29,7 +29,7 @@ def convert_to_decimal(ratio_str):
     except:
         pass
     return 0
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def get_nhl_schedule(start_date, end_date, train):
     # Convert dates to datetime objects
     # start_date = datetime.strptime(start_date, '%Y-%m-%d')
@@ -143,7 +143,7 @@ def joinBoxscore(schedule):
        'homeTeam.blocks', 'homeTeam.logo']], how="left", on="id")
 
     return schedule
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def getStandings(schedule):
     standings = pd.DataFrame()
     for date in schedule["startTimeUTC"]:
@@ -158,7 +158,7 @@ def getStandings(schedule):
         standing = pd.json_normalize(json_data['standings'])
         standings = pd.concat([standings, standing], axis=0)
     return standings
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def fill_missing_dates(df, date_col, team_col):
     """
     Fills missing dates in a dataframe for each team with the most recent available data.
@@ -212,7 +212,7 @@ def fill_missing_dates(df, date_col, team_col):
     filled_df = pd.concat(team_dfs, ignore_index=True)
 
     return filled_df
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def joinStandings(schedule, standings, train):
     homeTeamStandings = standings.copy()
     homeTeamStandings.columns = ['homeTeam_' + col for col in homeTeamStandings.columns]
@@ -230,14 +230,14 @@ def joinStandings(schedule, standings, train):
     return schedule
 
 
-@st.cache_data(show_spinner=False)
+#@st.cache(show_spinner=False)
 def getPredictions(startdate, enddate):
     df = get_nhl_schedule(startdate, enddate, train=False)
     df = df.loc[df["startTimeUTC"]<enddate]
     df2 = getStandings(df)
     df3 = joinStandings(df, df2, train=False)
     deployment = drx.Deployment("6560f92ef3aa6cdc30c695a1")
-    predictions = drx.Deployment.predict(deployment, X=df3, max_explanations=6)
+    predictions = drx.Deployment.predict(deployment, X=df3, max_explanations=10)
     predictions = pd.DataFrame(predictions)
     probabilities = drx.Deployment.predict_proba(deployment, X=df3)
     probabilities = pd.DataFrame(probabilities)
@@ -322,7 +322,7 @@ def mainPage():
     #Title
     titleContainer = st.container()
     titleContainer1,titleContainer2,titleContainer3 = titleContainer.columns([0.1,0.3,1])
-    titleContainer1.image("NHL-Logo.png", width = 75)
+    #titleContainer1.image("NHL-Logo-700x394.png", width = 75)
 
 
     # Predicted Winner
@@ -370,7 +370,7 @@ def mainPage():
             with st.spinner("Thinking..."):
                 explanation = explainPrediction(game, donMode=donMode)
 
-            tab1, tab2 = st.tabs(["Why", "AI Model Reason Codes"])
+            tab1, tab2 = st.tabs(["Why", "Model Reason Codes"])
             with tab1:
                 # GPT Don Cherry explanation of who the winner will likely be
                 try:
