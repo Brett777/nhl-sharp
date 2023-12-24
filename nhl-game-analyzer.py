@@ -193,7 +193,7 @@ def mainPage():
         print(predictions)
     with st.sidebar:
         #date = datetime.now(eastern).date()
-        date = predictions["startTimeUTC"].max()
+        #date = predictions["startTimeUTC"].max()
         gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
         gameChoice = st.selectbox(label="Tonight's Games", options=gameDayPredictions["Game Name"].unique())
         # gameChoice = gameDayPredictions["Game Name"].unique()[0]
