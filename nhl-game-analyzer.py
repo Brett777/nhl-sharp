@@ -195,7 +195,8 @@ def mainPage():
         #date = datetime.now(eastern).date()
         date = predictions["startTimeUTC"].max()
         print(f"the date is {date}")
-        gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
+        #gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
+        gameDayPredictions = predictions.loc[predictions["startTimeUTC"] == date]
         gameChoice = st.selectbox(label="Tonight's Games", options=gameDayPredictions["Game Name"].unique())
         # gameChoice = gameDayPredictions["Game Name"].unique()[0]
         game = predictions.loc[predictions["Game Name"] == gameChoice]
