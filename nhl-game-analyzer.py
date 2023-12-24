@@ -200,6 +200,8 @@ def mainPage():
         # gameChoice = gameDayPredictions["Game Name"].unique()[0]
         game = predictions.loc[predictions["Game Name"] == gameChoice]
         game.drop_duplicates(["ID"], inplace=True)
+        print("Game:")
+        print(game)
 
 
     # Title
