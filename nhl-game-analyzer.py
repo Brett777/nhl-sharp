@@ -43,12 +43,12 @@ def getPredictionsFromSnowflake():
 def getPastPredictionsFromSnowflake():
     # Connect to Snowflake. Replace the values below to match your environment
     ctx = snowflake.connector.connect(
-        user="DATAROBOT",
-        password='D@t@robot',
-        account="datarobot_partner",
-        warehouse="DEMO_WH",
-        database="SANDBOX",
-        schema="NHL_GAME_DATA",
+        user=os.environ["snowflakeUser"],
+        password=os.environ["snowflakePassword"],
+        account=os.environ["snowflakeAccount"],
+        warehouse=os.environ["snowflakeWarehouse"],
+        database=os.environ["snowflakeDatabase"],
+        schema=os.environ["snowflakeSchema"],
     )
     # Create a cursor object.
     cur = ctx.cursor()
@@ -192,7 +192,8 @@ def mainPage():
         predictions["Game Name"] = predictions["awayTeam_standings_teamName_default"].astype(str) + " @ " + predictions["homeTeam_standings_teamName_default"].astype(str)
         print(predictions)
     with st.sidebar:
-        date = datetime.now(eastern).date()
+        #date = datetime.now(eastern).date()
+        date = predictions["startTimeUTC"].max()
         gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
         gameChoice = st.selectbox(label="Tonight's Games", options=gameDayPredictions["Game Name"].unique())
         # gameChoice = gameDayPredictions["Game Name"].unique()[0]
