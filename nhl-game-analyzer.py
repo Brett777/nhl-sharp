@@ -189,7 +189,10 @@ def mainPage():
     enddate = datetime.now(eastern).date() + timedelta(days=2)
     with st.spinner("processing..."):
         predictions = getPredictionsFromSnowflake()
-        predictions["Game Name"] = predictions["awayTeam_standings_teamName_default"].astype(str) + " @ " + predictions["homeTeam_standings_teamName_default"].astype(str)
+        try:
+            predictions["Game Name"] = predictions["awayTeam_standings_teamName_default"].astype(str) + " @ " + predictions["homeTeam_standings_teamName_default"].astype(str)
+        except:
+            st.header("No games tonight " +datetime.datetime.today())
         print(predictions)
     with st.sidebar:
         #date = datetime.now(eastern).date()
