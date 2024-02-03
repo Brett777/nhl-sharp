@@ -195,17 +195,20 @@ def mainPage():
             st.header("No games tonight " +str(datetime.today()))
         print(predictions)
     with st.sidebar:
-        #date = datetime.now(eastern).date()
-        date = predictions["startTimeUTC"].max()
-        print(f"the date is {date}")
-        #gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
-        gameDayPredictions = predictions.loc[predictions["startTimeUTC"] == date]
-        gameChoice = st.selectbox(label="Tonight's Games", options=gameDayPredictions["Game Name"].unique())
-        # gameChoice = gameDayPredictions["Game Name"].unique()[0]
-        game = predictions.loc[predictions["Game Name"] == gameChoice]
-        game.drop_duplicates(["ID"], inplace=True)
-        print("Game:")
-        print(game)
+        try:
+            #date = datetime.now(eastern).date()
+            date = predictions["startTimeUTC"].max()
+            print(f"the date is {date}")
+            #gameDayPredictions = predictions.loc[predictions["startTimeUTC"].astype(str) == str(date)]
+            gameDayPredictions = predictions.loc[predictions["startTimeUTC"] == date]
+            gameChoice = st.selectbox(label="Tonight's Games", options=gameDayPredictions["Game Name"].unique())
+            # gameChoice = gameDayPredictions["Game Name"].unique()[0]
+            game = predictions.loc[predictions["Game Name"] == gameChoice]
+            game.drop_duplicates(["ID"], inplace=True)
+            print("Game:")
+            print(game)
+        except:
+            pass
 
 
     # Title
