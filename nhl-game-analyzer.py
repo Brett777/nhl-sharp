@@ -208,7 +208,7 @@ def mainPage():
             print("Game:")
             print(game)
         except:
-            pass
+            st.stop()
 
 
     # Title
