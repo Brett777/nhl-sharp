@@ -192,7 +192,7 @@ def mainPage():
         try:
             predictions["Game Name"] = predictions["awayTeam_standings_teamName_default"].astype(str) + " @ " + predictions["homeTeam_standings_teamName_default"].astype(str)
         except:
-            st.header("No games tonight " +datetime.today())
+            st.header("No games tonight " +str(datetime.today()))
         print(predictions)
     with st.sidebar:
         #date = datetime.now(eastern).date()
